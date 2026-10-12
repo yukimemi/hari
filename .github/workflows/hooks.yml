@@ -1,0 +1,94 @@
+# Repo-owned: keep changed-path transport coverage outside kata-managed CI.
+name: Native push hooks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  # Ordinary local cargo test may skip if jj is missing. This job must never skip.
+  HARI_REQUIRE_JJ: "1"
+
+jobs:
+  hooks:
+    name: hooks (${{ matrix.os }}, jj ${{ matrix.jj }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 0.30.0 removed libgit2 pushes: git.executable-path is always used.
+          # https://github.com/jj-vcs/jj/releases/tag/v0.30.0
+          - os: ubuntu-latest
+            jj: "0.30.0"
+            target: x86_64-unknown-linux-musl
+            sha256: 5540b5438d71867ccde3339d041e57eecf60edf8b4ecc3dfcce2af106e08f70b
+          - os: windows-latest
+            jj: "0.30.0"
+            target: x86_64-pc-windows-msvc
+            sha256: 4b094838898bebd3970ef6c94b9cf5fef4368a0291e33ae884736195abce0671
+          - os: macos-latest
+            jj: "0.30.0"
+            target: aarch64-apple-darwin
+            sha256: 160b9c575f279343b8cd9d2fcef74b03d16210d1457da328ceedc3a7a184c4c7
+          - os: ubuntu-latest
+            jj: "0.45.1"
+            target: x86_64-unknown-linux-musl
+            sha256: f35438350b5d61963aac5dd74ede510b31d6b9690769d1a6268cf058cc825f72
+          - os: windows-latest
+            jj: "0.45.1"
+            target: x86_64-pc-windows-msvc
+            sha256: 5dbf2619272c897394d34190a94b21a6ab8d1e8e59fcf7dfc173d8fa8aa90bf0
+          - os: macos-latest
+            jj: "0.45.1"
+            target: aarch64-apple-darwin
+            sha256: 51ba42e3d0682616f6eb015045bfe45289b396f03511f9897f645ce8e9272743
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+      - name: Install pinned native JJ release
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $extension = if ($IsWindows) { 'zip' } else { 'tar.gz' }
+          $asset = 'jj-v${{ matrix.jj }}-${{ matrix.target }}.' + $extension
+          $archive = Join-Path $env:RUNNER_TEMP $asset
+          $destination = Join-Path $env:RUNNER_TEMP 'hari-jj'
+          Invoke-WebRequest "https://github.com/jj-vcs/jj/releases/download/v${{ matrix.jj }}/$asset" -OutFile $archive
+          $actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne '${{ matrix.sha256 }}') { throw "JJ archive checksum mismatch: $actual" }
+          New-Item -ItemType Directory -Force $destination | Out-Null
+          if ($IsWindows) {
+            Expand-Archive -Path $archive -DestinationPath $destination
+          } else {
+            tar -xzf $archive -C $destination
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to extract JJ' }
+          }
+          $name = if ($IsWindows) { 'jj.exe' } else { 'jj' }
+          $binary = Get-ChildItem $destination -Recurse -File | Where-Object Name -eq $name | Select-Object -First 1
+          if (-not $binary) { throw 'JJ executable missing from release archive' }
+          $binary.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & $binary.FullName --version
+          if ($LASTEXITCODE -ne 0) { throw 'JJ executable failed to start' }
+      - name: Real Git/JJ hook integration
+        run: cargo test --locked --test hooks -- --nocapture
+      - name: Build actual release binary
+        run: cargo build --locked --release
+      - name: Installed release proxy smoke
+        run: cargo run --locked --release --example smoke

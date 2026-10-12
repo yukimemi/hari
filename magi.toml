@@ -1,0 +1,22 @@
+# Repository-specific gates; the machine config supplies the agent roster.
+[vars]
+cache = "{{ env.MAGI_CACHE | default(value='/tmp') }}"
+
+[verify]
+e2e = [
+  "HARI_REQUIRE_JJ=1 CARGO_TARGET_DIR={{ vars.cache }}/hari-target cargo test --locked --all-targets",
+  "CARGO_TARGET_DIR={{ vars.cache }}/hari-target cargo build --locked --release && CARGO_TARGET_DIR={{ vars.cache }}/hari-target cargo run --locked --release --example smoke",
+]
+gate = ["CARGO_TARGET_DIR={{ vars.cache }}/hari-target cargo make check"]
+
+[merge]
+base = "main"
+
+[prompts]
+all = """
+This repository uses jj with a colocated Git repo. Use Git in Magi's candidate \
+worktree, never run jj there, and never edit the main checkout. Hari changes \
+only the Git push --no-verify option; preserve native Git hooks, OS arguments, \
+transport safety, and the original Git executable. Do not add custom hook \
+configuration or fake Git porcelain output to hide upstream jj diagnostics.
+"""
