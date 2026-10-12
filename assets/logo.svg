@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 144" role="img" aria-label="hari — native Git pre-push hooks for jj">
+  <title>hari — a hook for your hooks</title>
+  <!-- 針: a fishing hook, with a sharp point and a rounded return. -->
+  <g transform="translate(20 9) scale(0.5)">
+    <g fill="none" stroke="#0a7e8c" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="164" cy="40" r="18" />
+      <path d="M164 58v88a60 60 0 0 1-120 0v-24" />
+    </g>
+    <path d="M37 128 44 88 70 118 55 114 51 128Z" fill="#0a7e8c" />
+  </g>
+  <text x="138" y="94" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="82" font-weight="700" letter-spacing="-3" fill="#1a1a1a">hari</text>
+  <text x="141" y="124" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" fill="#5a5a5a">針 — native Git hooks for jj</text>
+</svg>

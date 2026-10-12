@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="hari fishing-hook icon">
+  <title>hari — 針</title>
+  <g fill="none" stroke="#0a7e8c" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="164" cy="40" r="18" />
+    <path d="M164 58v88a60 60 0 0 1-120 0v-24" />
+  </g>
+  <path d="M37 128 44 88 70 118 55 114 51 128Z" fill="#0a7e8c" />
+</svg>
