@@ -70,6 +70,7 @@ fn push_command(args: &[OsString]) -> Option<usize> {
                     | "--namespace"
                     | "--config-env"
                     | "--super-prefix"
+                    | "--attr-source"
             )
         ) {
             // Missing values are left for Git's own argument validation.

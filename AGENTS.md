@@ -452,8 +452,11 @@ Releases / crates.io.
 - Hook discovery, interpreters, argv, stdin, and execution context belong to
   Git. Do not parse jj dry-run output or check out pushed commits for hooks.
 - The installed helper's adjacent `hari-git.json` stores ownership/schema and
-  the absolute original Git path, not hook settings. Never overwrite unowned
-  files or repoint a shared helper directory to another Git executable.
+  the absolute original Git path, not hook settings. Preserve symlink/multicall
+  entrypoint names. Never overwrite unowned files or repoint a shared helper
+  away from an available Git; explicit `--git` may recover a vanished stored Git.
+- Windows helper upgrades require active jj/Git operations to finish first;
+  do not promise replacement of a running executable.
 - Supported jj starts at 0.30.0 (subprocess-only Git transport). Repo-owned
   `.github/workflows/hooks.yml` tests that floor and 0.45.1 on three OSes;
   kata-managed CI/release files remain template-owned.

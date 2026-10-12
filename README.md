@@ -64,9 +64,14 @@ not a hook configuration file. Repeat `hari install` after upgrading Hari to
 refresh the installed helper.
 
 Existing unowned files are not overwritten. A helper directory already using
-a different Git executable is not repointed: choose another `--dir`, so other
-repositories retain their original Git. A higher-precedence setting that
-bypasses the helper is reported as an error.
+a different, available Git executable is not repointed: choose another `--dir`,
+so other repositories retain their original Git. If the stored Git has vanished
+(for example after a package-manager upgrade), recover the shared helper with
+`hari install --git /path/to/current/git` using the same `--dir` and scope.
+A higher-precedence setting that bypasses the helper is reported as an error.
+
+On Windows, wait for active jj/Git operations to finish before updating the
+installed helper; Windows cannot replace an executable while it is running.
 
 To disable Hari, restore the original Git path printed at installation:
 

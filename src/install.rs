@@ -180,8 +180,8 @@ pub fn run(options: Options) -> Result<()> {
     };
     let mut metadata_bytes = serde_json::to_vec_pretty(&metadata)?;
     metadata_bytes.push(b'\n');
-    // Stage both files before touching an existing owned installation. In particular,
-    // copying to a fresh inode permits upgrades while the old helper is running.
+    // Stage both files before touching an existing owned installation.
+    // Unix can replace a running helper; Windows requires active uses to finish.
     let staged_helper = stage(&directory, "binary", |file| {
         let mut input = File::open(&source)?;
         io::copy(&mut input, file)?;
@@ -390,7 +390,7 @@ fn publish(staged: &Path, destination: &Path, owned: bool) -> Result<()> {
     } else {
         fs::rename(staged, destination).with_context(|| {
             format!(
-                "Cannot replace owned installation file {}",
+                "Cannot replace owned installation file {}. On Windows, wait for active Git/jj processes to finish and retry",
                 destination.display()
             )
         })?;

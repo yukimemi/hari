@@ -694,3 +694,31 @@ fn reinstall_recovers_when_the_stored_real_git_has_vanished() {
     assert_success(&f.push(&["--bookmark", "recovered"]));
     f.assert_input(&[format!("{oid} {oid} refs/heads/recovered {ZERO}\n")]);
 }
+
+#[test]
+fn a_push_named_global_option_value_does_not_change_non_push_validation() {
+    let Some(f) = Fixture::new() else { return };
+    let supported = f
+        .command(&f.git)
+        .current_dir(&f.repo)
+        .args(["--attr-source=HEAD", "--version"])
+        .output()
+        .expect("check native Git attribute-source support");
+    if !supported.status.success() {
+        eprintln!("SKIP attribute-source regression: Git does not support --attr-source");
+        return;
+    }
+    f.install(true, false);
+    let oid = f.change("non-push option boundary");
+    f.bookmark("push", &oid);
+    let result = f
+        .command(f.proxy())
+        .current_dir(&f.repo)
+        .args(["--attr-source", "push", "status", "--no-verify"])
+        .output()
+        .expect("run native Git status through proxy");
+    assert!(
+        !result.status.success(),
+        "status must still reject --no-verify; a global option value is not the push subcommand"
+    );
+}
