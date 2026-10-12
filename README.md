@@ -181,8 +181,10 @@ HARI_REQUIRE_JJ=1 cargo test --test hooks -- --nocapture
 ```
 
 The repo-owned `hooks.yml` CI requires those tests on Windows, macOS, and
-Linux against jj 0.30.0 and 0.45.1. Kata-managed CI and release workflows remain
-managed by their templates.
+Linux against jj 0.30.0 and 0.45.1, and covers builds without the updater and
+the default musl release target. Live GitHub self-update checks run only on
+explicit `workflow_dispatch`, keeping API availability out of routine hook
+checks. Kata-managed CI and release workflows remain managed by their templates.
 
 ## License
 
