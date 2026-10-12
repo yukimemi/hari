@@ -441,3 +441,23 @@ operation that exercises the regression-prone surface:
 A failing smoke blocks the release before publishing to GitHub
 Releases / crates.io.
 <!-- kata:agents:rust-cli:end -->
+
+## Hari-specific conventions
+
+- Hari registers a Git proxy through jj's native `git.executable-path`; it is
+  not a jj/PATH shim or a hook manager. Do not add a custom hook format.
+- `src/proxy.rs` must remove only `--no-verify` before the actual Git push
+  argument separator. Preserve OS-string arguments, all non-push commands,
+  native stdout/stderr, and Git's transport and force-with-lease semantics.
+- Hook discovery, interpreters, argv, stdin, and execution context belong to
+  Git. Do not parse jj dry-run output or check out pushed commits for hooks.
+- The installed helper's adjacent `hari-git.json` stores ownership/schema and
+  the absolute original Git path, not hook settings. Never overwrite unowned
+  files or repoint a shared helper directory to another Git executable.
+- Supported jj starts at 0.30.0 (subprocess-only Git transport). Repo-owned
+  `.github/workflows/hooks.yml` tests that floor and 0.45.1 on three OSes;
+  kata-managed CI/release files remain template-owned.
+- `tests/hooks.rs` isolates jj/Git config and uses local bare remotes.
+  `HARI_REQUIRE_JJ=1` makes a missing/unsupported jj fail instead of skipping.
+- `examples/smoke.rs` tests the actual produced binary and native hook
+  rejection/success using Git only: kata release runners need not install jj.
