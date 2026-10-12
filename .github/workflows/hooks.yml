@@ -92,3 +92,69 @@ jobs:
         run: cargo build --locked --release
       - name: Installed release proxy smoke
         run: cargo run --locked --release --example smoke
+
+  no-self-update:
+    name: no-self-update (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+      - name: Compile without updater dependencies
+        run: cargo check --locked --all-targets --no-default-features
+      - name: Build actual no-updater binary
+        run: cargo build --locked --release --no-default-features
+      - name: Verify native hook proxy without self-update
+        run: cargo run --locked --release --no-default-features --example smoke
+
+  musl:
+    name: musl (default self-update)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+      - name: Install release-target C toolchain
+        run: sudo apt-get install -y musl-tools
+      - name: Build actual musl release binary with updater
+        run: cargo build --locked --release --target x86_64-unknown-linux-musl
+      - name: Verify native hook proxy in musl release binary
+        run: cargo run --locked --release --target x86_64-unknown-linux-musl --example smoke
+      - name: Check live updater in musl binary on explicit dispatch
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cargo run --locked --release --target x86_64-unknown-linux-musl -- self-update --check --non-interactive
+
+  self-update-check:
+    # Live API availability is checked explicitly, not on every hook PR.
+    if: github.event_name == 'workflow_dispatch'
+    name: self-update check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+      - name: Check self-update without replacing the binary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cargo run --locked --release -- self-update --check --non-interactive
