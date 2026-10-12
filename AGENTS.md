@@ -464,3 +464,7 @@ Releases / crates.io.
   `HARI_REQUIRE_JJ=1` makes a missing/unsupported jj fail instead of skipping.
 - `examples/smoke.rs` tests the actual produced binary and native hook
   rejection/success using Git only: kata release runners need not install jj.
+- Logo hook geometry is shared by `assets/logo.svg`, `assets/logo-dark.svg`,
+  and `assets/icon.svg`; update all three together. Keep backgrounds transparent.
+  README uses absolute raw-GitHub image URLs for GitHub/crates.io compatibility,
+  and Cargo's package include list must retain `assets/*.svg`.

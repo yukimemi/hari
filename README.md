@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/yukimemi/hari/main/assets/logo-dark.svg">
+    <img src="https://raw.githubusercontent.com/yukimemi/hari/main/assets/logo.svg" alt="hari — native Git pre-push hooks for jj" width="420">
+  </picture>
+</p>
+
 # hari
 
 Let `jj git push` run your existing Git **pre-push** hooks.
@@ -15,12 +22,12 @@ Hari hook configuration, shell wrapper, jj alias, or PATH shim.
   On Windows, use Git for Windows. Hari does not make POSIX-only hook tools
   portable by itself.
 
-## Build and install
+## Install
 
-From this source checkout:
+Install from [crates.io](https://crates.io/crates/hari):
 
 ```sh
-cargo install --path . --locked
+cargo install hari --locked
 ```
 
 In a jj repository, enable hooks for that repository:
