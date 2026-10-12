@@ -12,12 +12,14 @@ use anyhow::{Context, Result, ensure};
 /// are never interpreted. Other Git commands are forwarded unchanged.
 /// On Unix this replaces the process, preserving Git's signals and status.
 pub fn run(real_git: &Path, args: &[OsString]) -> Result<i32> {
-    let real_git = dunce::canonicalize(real_git)
+    // Compare resolved targets, but execute the stored path itself so a
+    // multicall shim still sees its own name.
+    let target = dunce::canonicalize(real_git)
         .with_context(|| format!("cannot locate original Git at {}", real_git.display()))?;
     let current = dunce::canonicalize(std::env::current_exe()?)?;
-    ensure!(real_git != current, "hari's Git proxy cannot invoke itself");
+    ensure!(target != current, "hari's Git proxy cannot invoke itself");
 
-    let mut command = Command::new(&real_git);
+    let mut command = Command::new(real_git);
     if let Some(push) = push_command(args) {
         command.args(&args[..=push]);
         let mut after_separator = false;

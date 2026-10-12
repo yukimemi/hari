@@ -288,10 +288,13 @@ fn regular_file_exists(path: &Path) -> Result<bool> {
     }
 }
 
+/// Keep the path as found rather than canonicalizing it: multicall shims (mise,
+/// asdf, ...) dispatch on their own name, and versioned symlink targets vanish
+/// when the tool is upgraded.
 fn resolve_executable(path: &Path, description: &str) -> Result<PathBuf> {
     let resolved = which::which(path)
         .with_context(|| format!("Cannot find executable {description}: {}", path.display()))?;
-    dunce::canonicalize(&resolved).with_context(|| {
+    std::path::absolute(&resolved).with_context(|| {
         format!(
             "Cannot resolve executable {description}: {}",
             resolved.display()
@@ -300,8 +303,10 @@ fn resolve_executable(path: &Path, description: &str) -> Result<PathBuf> {
 }
 
 fn reject_recursion(real_git: &Path, helper: &Path) -> Result<()> {
+    let target = dunce::canonicalize(real_git)
+        .with_context(|| format!("Cannot resolve Git executable {}", real_git.display()))?;
     ensure!(
-        !is_helper(real_git) && real_git != helper,
+        !is_helper(real_git) && !is_helper(&target) && target != helper,
         "Refusing recursive Git executable {}; pass --git PATH to a real Git executable",
         real_git.display()
     );
