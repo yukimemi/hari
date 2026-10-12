@@ -67,7 +67,10 @@ pub fn real_git_for_proxy(executable: &Path) -> Result<PathBuf> {
         .parent()
         .context("The hari Git helper has no parent directory")?;
     let metadata = read_metadata(&directory.join(METADATA_NAME))?;
-    let real_git = resolve_executable(&metadata.real_git, "stored real Git")?;
+    let real_git = resolve_executable(
+        &metadata.real_git,
+        "stored real Git (rerun hari install with --git PATH to a real Git executable)",
+    )?;
     reject_recursion(&real_git, &executable)?;
     Ok(real_git)
 }
@@ -141,8 +144,10 @@ pub fn run(options: Options) -> Result<()> {
     reject_recursion(&real_git, &source)?;
     reject_recursion(&real_git, &helper)?;
     if let Some(previous) = &previous {
+        // A vanished stored Git (e.g. a versioned path removed by an upgrade) already
+        // breaks every user of this helper, so repointing it is the recovery path.
         ensure!(
-            previous.real_git == real_git,
+            previous.real_git == real_git || which::which(&previous.real_git).is_err(),
             "The helper directory {} already uses Git at {}. Choose another --dir for {} so other repositories keep their original Git",
             directory.display(),
             previous.real_git.display(),

@@ -641,3 +641,56 @@ fn shared_install_directory_rejects_a_different_real_git_without_changes() {
         second_config
     );
 }
+
+#[cfg(unix)]
+#[test]
+fn reinstall_recovers_when_the_stored_real_git_has_vanished() {
+    let Some(f) = Fixture::new() else { return };
+    // A relocated Git binary may not find its own runtime, so stand in for a
+    // versioned install path with a removable wrapper around the real Git.
+    let vanishing_git = f.root.path().join("vanishing-git");
+    fs::write(
+        &vanishing_git,
+        format!("#!/bin/sh\nexec '{}' \"$@\"\n", portable(&f.git)),
+    )
+    .expect("create a removable real Git executable");
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&vanishing_git, fs::Permissions::from_mode(0o755))
+            .expect("make Git wrapper executable");
+    }
+    f.jj(&[
+        "config",
+        "set",
+        "--repo",
+        "git.executable-path",
+        &portable(&vanishing_git),
+    ]);
+    f.install(false, false);
+    fs::remove_file(&vanishing_git).expect("simulate a Git upgrade removing the stored path");
+    assert!(
+        !f.command(f.proxy())
+            .arg("--version")
+            .status()
+            .expect("run proxy")
+            .success(),
+        "the proxy cannot run a vanished Git"
+    );
+    f.install(true, false);
+    let metadata: serde_json::Value = serde_json::from_slice(
+        &fs::read(f.install_dir().join("hari-git.json")).expect("repointed metadata"),
+    )
+    .expect("metadata JSON");
+    assert_eq!(
+        dunce::canonicalize(Path::new(
+            metadata["real_git"].as_str().expect("real Git path")
+        ))
+        .expect("canonical real Git"),
+        dunce::canonicalize(&f.git).expect("canonical original Git")
+    );
+    f.default_hook(CAPTURE_HOOK);
+    let oid = f.change("recovered after Git upgrade");
+    f.bookmark("recovered", &oid);
+    assert_success(&f.push(&["--bookmark", "recovered"]));
+    f.assert_input(&[format!("{oid} {oid} refs/heads/recovered {ZERO}\n")]);
+}
