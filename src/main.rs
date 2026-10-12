@@ -1,4 +1,6 @@
 mod install;
+#[cfg(feature = "self-update")]
+mod updater;
 
 use std::path::Path;
 
@@ -16,6 +18,19 @@ struct Cli {
 enum Commands {
     /// Install and register a native Git helper in jj configuration.
     Install(install::Options),
+    /// Update hari to the latest GitHub release.
+    #[cfg(feature = "self-update")]
+    SelfUpdate {
+        /// Skip the confirmation prompt.
+        #[arg(long, short = 'y')]
+        yes: bool,
+        /// Report availability without installing an update.
+        #[arg(long)]
+        check: bool,
+        /// Fail rather than prompt if an update requires confirmation.
+        #[arg(long)]
+        non_interactive: bool,
+    },
 }
 
 fn run() -> Result<i32> {
@@ -29,6 +44,12 @@ fn run() -> Result<i32> {
 
     match Cli::parse().command {
         Commands::Install(options) => install::run(options)?,
+        #[cfg(feature = "self-update")]
+        Commands::SelfUpdate {
+            yes,
+            check,
+            non_interactive,
+        } => updater::run(yes, check, non_interactive)?,
     }
     Ok(0)
 }

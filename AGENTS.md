@@ -468,3 +468,9 @@ Releases / crates.io.
   and `assets/icon.svg`; update all three together. Keep backgrounds transparent.
   README uses absolute raw-GitHub image URLs for GitHub/crates.io compatibility,
   and Cargo's package include list must retain `assets/*.svg`.
+- Self-update is explicit through `kaishin` and the default `self-update` feature.
+  Create its Tokio runtime only for `hari self-update`; never check/update or
+  initialize an updater during Git proxy operations or ordinary installation.
+  `--no-default-features` omits the command and updater dependencies.
+- Self-update replaces Hari itself, not installed `hari-git` copies. Users
+  refresh helpers by rerunning installation with the original directory/scope.

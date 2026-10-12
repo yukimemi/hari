@@ -92,3 +92,28 @@ jobs:
         run: cargo build --locked --release
       - name: Installed release proxy smoke
         run: cargo run --locked --release --example smoke
+      - name: Check self-update against GitHub Releases without installing
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cargo run --locked --release -- self-update --check --non-interactive
+
+  no-self-update:
+    name: no-self-update (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+        continue-on-error: true
+      - name: Compile without updater dependencies
+        run: cargo check --locked --all-targets --no-default-features
+      - name: Build actual no-updater binary
+        run: cargo build --locked --release --no-default-features
+      - name: Verify native hook proxy without self-update
+        run: cargo run --locked --release --no-default-features --example smoke

@@ -13,13 +13,19 @@ keywords = ["git", "jj", "jujutsu", "hooks", "pre-push"]
 categories = ["command-line-utilities", "development-tools"]
 include = ["src/**/*.rs", "tests/**/*.rs", "examples/*.rs", "assets/*.svg", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE"]
 
+[features]
+default = ["self-update"]
+self-update = ["dep:kaishin", "dep:tokio"]
+
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 dirs = "6"
 dunce = "1"
+kaishin = { version = "0.7.5", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tokio = { version = "1.53.1", features = ["rt", "time", "net"], optional = true }
 which = "8"
 
 [dev-dependencies]

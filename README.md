@@ -90,6 +90,38 @@ jj config set --repo git.executable-path /path/to/original/git
 Do not delete a helper while another repository or user configuration still
 references it.
 
+## Self-update
+
+Hari uses [kaishin](https://github.com/yukimemi/kaishin) for explicit updates
+from GitHub Releases:
+
+```sh
+hari self-update --check
+hari self-update
+hari self-update --yes --non-interactive
+```
+
+`--check` only reports availability. `--yes` skips confirmation, while
+`--non-interactive` refuses to prompt if an update needs confirmation.
+There are no background update checks during `hari install` or Git proxy
+operations.
+
+After updating Hari, rerun `hari install` with the original `--dir` and scope
+(`--user` if applicable) to refresh the copied Git helper. Self-update does not
+change jj configuration or replace those helper copies automatically.
+
+Self-update is enabled by default. Package managers can build without it:
+
+```sh
+cargo install hari --locked --no-default-features
+```
+
+This omits the `self-update` command and its HTTPS/updater dependencies; Git
+hook integration remains available. Use the package manager to update that build.
+
+Default source builds inherit kaishin's native TLS build requirements, including
+a C toolchain. Prebuilt GitHub release binaries do not need that toolchain to run.
+
 ## How it works
 
 jj normally invokes `git push --porcelain --no-verify ...`, deliberately
