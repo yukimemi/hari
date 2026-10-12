@@ -14,7 +14,7 @@ categories = ["command-line-utilities", "development-tools"]
 include = ["src/**/*.rs", "tests/**/*.rs", "examples/*.rs", "assets/*.svg", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE"]
 
 [dependencies]
-anyhow = "1"
+anyhow = "1.0.104"
 clap = { version = "4", features = ["derive"] }
 dirs = "6"
 dunce = "1"
