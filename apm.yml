@@ -9,6 +9,10 @@ description: |
   to `#main` so `apm install --update` always pulls the latest
   renri skill.
 author: yukimemi
+# .claude と .gemini が両方あるため、APM の自動検出は
+# "Multiple harnesses detected" で停止し、Renovate の artifact 更新が失敗する。
+# 利用中の両ハーネスを明示し、既存のスキル配備先を維持する。
+targets: [claude, gemini]
 dependencies:
   apm:
     - yukimemi/renri#main
